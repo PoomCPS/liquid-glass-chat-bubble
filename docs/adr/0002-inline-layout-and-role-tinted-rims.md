@@ -1,0 +1,3 @@
+# 2. Stream-Native Inline Layout with Role-Tinted Specular Rims
+
+We decided to use a compact, stream-native inline layout (`[Source Jewel] [Badges] Username: Message`) rather than a multi-row iOS notification banner. While multi-row cards replicate mobile notifications, they consume excessive vertical screen real estate over live gameplay and stream footage. To maintain the authentic iOS Liquid Glass aesthetic within a compact layout, role hierarchy is communicated through subtle chromatic shifts in the card's specular rim (Teal for Subscribers, Magenta for VIPs) and an arrival specular shimmer rather than heavy colored backgrounds.

@@ -1,0 +1,760 @@
+/* ==========================================================================
+   Liquid Glass Stream Chat Overlay (Apple iOS 27 Aesthetic)
+   ========================================================================== */
+
+:root {
+  --glass-opacity: 0.00;
+  --glass-blur: 2px;
+  --glass-saturate: 140%;
+  --glass-brightness: 105%;
+  --card-radius: 18px;
+  --text-main: #f8fafc;
+  --text-secondary: rgba(255, 255, 255, 0.72);
+
+  /* Directional Corner LED Spotlight Spectrums (Max 20% Alpha) */
+  --led-spot-core: rgba(255, 255, 255, 0.18);
+  --led-spot-beam: rgba(56, 189, 248, 0.14);
+  --led-spot-fade: rgba(244, 63, 94, 0.04);
+  --led-spot-ambient: rgba(56, 189, 248, 0.10);
+}
+
+/* Reset & Root Setup */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  color: var(--text-main);
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* SVG Optical Lens Defs (Hidden utility container) */
+.optical-lens-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Demo Backdrop for Testing in Browsers (Inactive in OBS) */
+.demo-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 0.4s ease, background-image 0.4s ease;
+  pointer-events: none;
+}
+
+body.bg-custom .demo-backdrop {
+  background-image: url('test-bg.jpg');
+}
+
+body.bg-vibrant .demo-backdrop {
+  background-image:
+    radial-gradient(circle at 15% 85%, rgba(145, 70, 255, 0.65), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(0, 242, 254, 0.6), transparent 50%),
+    radial-gradient(circle at 45% 55%, rgba(255, 60, 172, 0.55), transparent 55%),
+    linear-gradient(135deg, #090a0f 0%, #151a2d 50%, #0d111a 100%);
+}
+
+body.bg-neon .demo-backdrop {
+  background-image:
+    radial-gradient(circle at 20% 80%, #00f2fe 0%, transparent 40%),
+    radial-gradient(circle at 75% 30%, #ff0844 0%, transparent 45%),
+    linear-gradient(45deg, #050508 0%, #0f0c29 50%, #1b1536 100%);
+}
+
+body.bg-dark .demo-backdrop {
+  background-image: linear-gradient(135deg, #0f1117 0%, #1a1d26 100%);
+}
+
+body.bg-transparent .demo-backdrop {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Bubble Stack Container (Bottom-Up)
+   ========================================================================== */
+
+.chat-stack {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  width: 440px;
+  max-width: calc(100vw - 48px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ==========================================================================
+   The Liquid Glass Message Bubble
+   ========================================================================== */
+
+.chat-bubble {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--card-radius);
+  font-size: 14px;
+  line-height: 1.48;
+  word-break: break-word;
+  pointer-events: auto;
+  transform-origin: bottom left;
+
+  /* Optical Layer 1: Dedicated Refraction Underlay Container */
+  background: transparent;
+  overflow: hidden;
+
+  /* Optical Layer 2: Neutral Specular Bevel & Cut-Glass Edge Reflection (Zero Border Color) */
+  box-shadow:
+    /* Inner subtle glass specular sheen */
+    inset 0 0 4px 0px rgba(250, 250, 250, 0.28),
+    /* Razor-sharp top-left glass bevel reflection (white light entry, zero color) */
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.50),
+    inset 1px 0 1.5px 0 rgba(255, 255, 255, 0.28),
+    /* Delicate colorless perimeter line */
+    0 0 0 0.5px rgba(255, 255, 255, 0.18),
+    /* Bottom-Right LED Ambient Light Pool */
+    3px 5px 18px -2px var(--led-spot-ambient),
+    /* Soft ambient contact & atmospheric shadow */
+    0 4px 16px rgba(0, 0, 0, 0.20),
+    0 12px 30px rgba(0, 0, 0, 0.26);
+
+  /* Spring Arrival Animation */
+  animation: liquidSpringIn 0.38s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  transition: transform 0.25s ease, opacity 0.25s ease, max-height 0.25s ease;
+}
+
+/* Dedicated Optical Refraction Underlay (Ekino-France Turbulence Glass) */
+.glass-refract {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+
+  /* Native Hardware-Accelerated Backdrop Refraction */
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(var(--glass-brightness));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(var(--glass-brightness));
+  background-color: rgba(255, 255, 255, var(--glass-opacity));
+}
+
+/* Organic Liquid Caustic Refraction Membrane */
+.glass-liquid-caustic {
+  position: absolute;
+  inset: -16px;
+  background:
+    radial-gradient(ellipse at 35% 30%, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.12) 45%, transparent 75%),
+    radial-gradient(ellipse at 75% 70%, rgba(255, 255, 255, 0.25) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, transparent 40%, rgba(255, 255, 255, 0.15) 100%);
+  filter: url(#liquid-glass-lens);
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* 100% Colorless Neutral Optical Bevel (Zero Border Color) */
+.chat-bubble::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  padding: 1.25px;
+  /* Fine glass bevel rim */
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.10) 100%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Directional Bottom-Right Corner LED Spotlight Layer */
+.corner-led-spotlight {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 3;
+}
+
+/* Directional Conical LED Light Beam shining upward-left into the glass */
+.corner-led-spotlight::before {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 135px;
+  height: 75px;
+  transform-origin: bottom right;
+  transform: rotate(-24deg);
+  background:
+    /* Specular beam spine (directional white highlight shaft) */
+    radial-gradient(ellipse 90px 22px at 92% 92%, rgba(255, 255, 255, 0.80) 0%, rgba(255, 255, 255, 0.35) 25%, transparent 65%),
+    /* Primary colored directional spotlight beam (transparent role hue) */
+    radial-gradient(ellipse 120px 55px at 90% 90%, var(--led-spot-core) 0%, var(--led-spot-beam) 40%, var(--led-spot-fade) 65%, transparent 85%);
+  filter: blur(3px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* High-intensity Specular Focal Glint right at the corner vertex */
+.corner-led-spotlight::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 3px 1.5px #ffffff,
+    0 0 8px 3px var(--led-spot-core),
+    0 0 16px 4px var(--led-spot-beam);
+  opacity: 0.95;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Optical Layer 5: Specular Arrival Shimmer Glint */
+.chat-bubble::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  border-radius: var(--card-radius) var(--card-radius) 0 0;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.70) 50%,
+      transparent 100%);
+  opacity: 0;
+  transform: translateX(-100%);
+  animation: specularShimmer 0.45s ease-out 0.05s forwards;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Role LED Spotlight Spectrum Classes (Max 20% Alpha / Highly Transparent) */
+.chat-bubble.role-sub {
+  --led-spot-core: rgba(0, 242, 254, 0.20);
+  --led-spot-beam: rgba(2, 132, 199, 0.14);
+  --led-spot-fade: rgba(0, 242, 254, 0.04);
+  --led-spot-ambient: rgba(0, 242, 254, 0.10);
+}
+
+.chat-bubble.role-vip {
+  --led-spot-core: rgba(255, 60, 172, 0.20);
+  --led-spot-beam: rgba(244, 63, 94, 0.14);
+  --led-spot-fade: rgba(255, 60, 172, 0.04);
+  --led-spot-ambient: rgba(255, 60, 172, 0.10);
+}
+
+.chat-bubble.role-mod {
+  --led-spot-core: rgba(192, 132, 252, 0.20);
+  --led-spot-beam: rgba(99, 102, 241, 0.14);
+  --led-spot-fade: rgba(175, 82, 222, 0.04);
+  --led-spot-ambient: rgba(168, 85, 247, 0.10);
+}
+
+.chat-bubble.role-broadcaster {
+  --led-spot-core: rgba(251, 191, 36, 0.20);
+  --led-spot-beam: rgba(245, 158, 11, 0.14);
+  --led-spot-fade: rgba(217, 119, 6, 0.04);
+  --led-spot-ambient: rgba(245, 158, 11, 0.10);
+}
+
+/* Eviction / Exit Animation */
+.chat-bubble.is-evicting {
+  animation: liquidFadeOut 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* ==========================================================================
+   Stream-Native Inline Layout Components
+   ========================================================================== */
+
+.bubble-content {
+  position: relative;
+  z-index: 5;
+  display: inline;
+  vertical-align: middle;
+}
+
+/* Source Jewel (Hidden per user specification) */
+.source-jewel {
+  display: none !important;
+}
+
+/* Badge Icons (Twitch Official CDN & Custom Badges) */
+.chat-badge-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  object-fit: contain;
+  vertical-align: -3px;
+  margin-right: 4px;
+  border-radius: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.65));
+}
+
+/* Badges */
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 5px;
+  vertical-align: -2px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.badge-sub {
+  background: rgba(0, 242, 254, 0.25);
+  color: #00f2fe;
+  border-color: rgba(0, 242, 254, 0.4);
+}
+
+.badge-vip {
+  background: rgba(255, 60, 172, 0.25);
+  color: #ff3cac;
+  border-color: rgba(255, 60, 172, 0.4);
+}
+
+.badge-mod {
+  background: rgba(168, 85, 247, 0.25);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.badge-broadcaster {
+  background: rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+/* Author Username */
+.author-name {
+  font-weight: 700;
+  margin-right: 6px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 2px 5px rgba(0, 0, 0, 0.85);
+}
+
+/* Message Text */
+.message-text {
+  color: #f8fafc;
+  font-weight: 450;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 2px 5px rgba(0, 0, 0, 0.85);
+}
+
+/* Emote Styling (Twitch + 7TV WebP) */
+.chat-emote {
+  height: 1.6em;
+  min-height: 22px;
+  max-height: 32px;
+  vertical-align: -5px;
+  margin: 0 2px;
+  display: inline-block;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes liquidSpringIn {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scale(0.92);
+    filter: blur(4px);
+  }
+
+  65% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.01);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes specularShimmer {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes liquidFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 80px;
+    margin-bottom: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.92);
+    max-height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+  }
+}
+
+/* ==========================================================================
+   Interactive Settings HUD (iOS Glass Style)
+   ========================================================================== */
+
+.hud-trigger-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(20, 22, 30, 0.45);
+  backdrop-filter: blur(20px) saturate(180%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.hud-trigger-btn:hover {
+  background: rgba(35, 40, 55, 0.65);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.settings-hud {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 380px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  z-index: 200;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(18, 20, 28, 0.75);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    0 16px 48px rgba(0, 0, 0, 0.5);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.settings-hud.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.hud-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-logo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #00f2fe;
+  box-shadow: 0 0 10px #00f2fe;
+}
+
+.hud-title-group h2 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.hud-version-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 10px;
+  color: #38bdf8;
+}
+
+.hud-icon-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.hud-icon-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hud-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hud-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+}
+
+.hud-button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  color: #061528;
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.btn-ghost:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hud-field {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 4px 8px;
+  gap: 8px;
+}
+
+.hud-field input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+
+.hud-field input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.hud-field-icon {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.twitch-color {
+  color: #a855f7;
+}
+
+.yt-color {
+  color: #ef4444;
+}
+
+.btn-tiny {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-tiny:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.hud-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hud-slider-group input[type="range"] {
+  accent-color: #00f2fe;
+  cursor: pointer;
+}
+
+.hud-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bg-chip {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bg-chip.active {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: #00f2fe;
+  color: #00f2fe;
+  font-weight: 600;
+}
+
+.hud-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.btn-copy {
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+/* OBS Mode (When ?obs=true is present) */
+body.obs-mode .hud-trigger-btn,
+body.obs-mode .settings-hud,
+body.obs-mode .demo-backdrop {
+  display: none !important;
+}
