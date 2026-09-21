@@ -47,6 +47,7 @@ body {
 }
 
 /* Demo Backdrop for Testing in Browsers (Inactive in OBS) */
+/* Demo Backdrop for Testing in Browsers (Default transparent, hidden in OBS) */
 .demo-backdrop {
   position: absolute;
   inset: 0;
@@ -55,13 +56,19 @@ body {
   background-position: center;
   transition: opacity 0.4s ease, background-image 0.4s ease;
   pointer-events: none;
+  opacity: 0;
+  display: none;
 }
 
 body.bg-custom .demo-backdrop {
+  display: block;
+  opacity: 1;
   background-image: url('test-bg.jpg');
 }
 
 body.bg-vibrant .demo-backdrop {
+  display: block;
+  opacity: 1;
   background-image:
     radial-gradient(circle at 15% 85%, rgba(145, 70, 255, 0.65), transparent 45%),
     radial-gradient(circle at 85% 20%, rgba(0, 242, 254, 0.6), transparent 50%),
@@ -70,6 +77,8 @@ body.bg-vibrant .demo-backdrop {
 }
 
 body.bg-neon .demo-backdrop {
+  display: block;
+  opacity: 1;
   background-image:
     radial-gradient(circle at 20% 80%, #00f2fe 0%, transparent 40%),
     radial-gradient(circle at 75% 30%, #ff0844 0%, transparent 45%),
@@ -77,11 +86,29 @@ body.bg-neon .demo-backdrop {
 }
 
 body.bg-dark .demo-backdrop {
+  display: block;
+  opacity: 1;
   background-image: linear-gradient(135deg, #0f1117 0%, #1a1d26 100%);
 }
 
 body.bg-transparent .demo-backdrop {
   opacity: 0;
+  display: none;
+}
+
+/* OBS Studio & Clean Overlay Mode (ONLY the chat bubble stack is visible) */
+body.obs-mode,
+body.bg-transparent {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+body.obs-mode .hud-trigger-btn,
+body.obs-mode .settings-hud,
+body.obs-mode .demo-backdrop {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* ==========================================================================

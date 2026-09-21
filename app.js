@@ -123,17 +123,17 @@
     loadGlobalBadges();
     updateObsUrlDisplay();
 
-    // If not in OBS mode, start with custom uploaded artwork for glass preview
-    if (!state.isObsMode) {
-      els.body.classList.add('bg-custom');
-      // Show initial greeting mockup after brief delay
+    // Default to transparent background
+    els.body.classList.add('bg-transparent');
+
+    if (state.isObsMode) {
+      els.body.classList.add('obs-mode');
+    } else {
+      // In standalone browser preview, show initial greeting after brief delay
       setTimeout(() => {
         simulateMockMessage('system');
         simulateMockMessage('sub');
       }, 400);
-    } else {
-      els.body.classList.add('obs-mode');
-      els.body.classList.add('bg-transparent');
     }
 
     // Auto connect Twitch if channel param passed
@@ -146,7 +146,8 @@
   function parseUrlParams() {
     const params = new URLSearchParams(window.location.search);
     
-    if (params.get('obs') === 'true' || params.get('clean') === 'true') {
+    // Auto-detect OBS Studio browser source environment or explicit flags
+    if (window.obsstudio || params.get('obs') === 'true' || params.get('clean') === 'true') {
       state.isObsMode = true;
     }
     if (params.has('twitch')) {
@@ -428,12 +429,19 @@
   function toggleHud() {
     els.settingsHud.classList.toggle('is-open');
     const isOpen = els.settingsHud.classList.contains('is-open');
-    els.settingsHud.setAttribute('aria-hidden', !isOpen);
+    if (isOpen) {
+      els.settingsHud.removeAttribute('inert');
+      els.hudToggleBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      els.settingsHud.setAttribute('inert', '');
+      els.hudToggleBtn.setAttribute('aria-expanded', 'false');
+    }
   }
 
   function closeHud() {
     els.settingsHud.classList.remove('is-open');
-    els.settingsHud.setAttribute('aria-hidden', 'true');
+    els.settingsHud.setAttribute('inert', '');
+    els.hudToggleBtn.setAttribute('aria-expanded', 'false');
   }
 
   function updateObsUrlDisplay() {
